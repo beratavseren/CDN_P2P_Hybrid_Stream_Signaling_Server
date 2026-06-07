@@ -17,6 +17,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ClusteringService {
 
+    //DENEME1
+
     private final PeerNodeRegistry peerNodeRegistry;
     private final PeerNodeService peerNodeService;
     private final ApplicationEventPublisher eventPublisher;

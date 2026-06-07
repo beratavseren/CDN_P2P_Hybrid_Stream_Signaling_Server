@@ -13,7 +13,7 @@ pipeline {
         stage('SourceMeter Statik Analiz') {
             steps {
                 echo "🔍 1. Adım: SourceMeter ile proje taranıyor..."
-                powershell "& '${SOURCEMETER_PATH}' -projectBaseDir . -resultsDir ./sm_results -projectName CodeSmellProject"
+                powershell "& '${SOURCEMETER_PATH}' -projectBaseDir=. -resultsDir=sm_results -projectName=CodeSmellProject"
             }
         }
 

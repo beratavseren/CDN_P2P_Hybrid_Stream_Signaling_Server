@@ -7,6 +7,7 @@ pipeline {
         SOURCEMETER_PATH = "C:/Users/musab/Downloads/SourceMeter-10.2.0-x64-Windows/SourceMeter-10.2.0-x64-Windows/Java/AnalyzerJava.exe"
         PYTHON_PATH = "C:/Users/musab/AppData/Local/Programs/Python/Python312/python.exe"
         API_URL = "http://localhost:8000/api/v1/predict"
+        PYTHONIOENCODING = "utf-8"
     }
 
     stages {
@@ -22,13 +23,19 @@ pipeline {
                     script {
                         echo "🚀 2. Adım: Yapay Zeka denetimi başlatılıyor..."
 
-                        // YENİ DÜZELTME: PowerShell'in False basma huyunu aşmak için filtrelemeyi Groovy ile yapıyoruz
                         def diffOutput = powershell(script: "git diff --name-only HEAD~1 HEAD", returnStdout: true).trim()
                         def changedFiles = diffOutput.split('\r?\n').findAll { it.trim().endsWith('.java') }
 
                         if (changedFiles.isEmpty()) {
                             echo "✅ Değişen Java dosyası bulunamadı. Yapay Zeka kontrolü atlanıyor."
                         } else {
+                            // YENİ: Tarihli klasörü atlamak için Class.csv dosyasının yerini dinamik olarak arayıp buluyoruz
+                            def csvFullPath = powershell(script: "(Get-ChildItem -Path sm_results -Filter '*Class.csv' -Recurse | Select-Object -First 1).FullName", returnStdout: true).trim()
+
+                            if (!csvFullPath) {
+                                error("⛔ Class.csv dosyası bulunamadı! SourceMeter analizi başarısız olmuş olabilir.")
+                            }
+
                             for (file in changedFiles) {
                                 file = file.trim()
                                 echo "--------------------------------------------------------"
@@ -36,16 +43,14 @@ pipeline {
 
                                 def className = file.tokenize('/').last().replaceAll('\\.java$', '')
 
-                                // YENİ DÜZELTME: Python'u tam yoluyla çalıştırıyoruz
-                                powershell "& '${PYTHON_PATH}' MetrikAdapter.py --java \"${file}\" --csv \"./sm_results/CodeSmellProject/java/Class.csv\" --class_name \"${className}\""
+                                // YENİ: Bulunan o dinamik CSV yolunu Python'a veriyoruz
+                                powershell "& '${PYTHON_PATH}' MetrikAdapter.py --java \"${file}\" --csv \"${csvFullPath}\" --class_name \"${className}\""
 
-                                // API'ye gönder
                                 def response = powershell(script: "(Invoke-RestMethod -Uri '${API_URL}' -Method Post -ContentType 'application/json' -InFile 'payload.json' | ConvertTo-Json -Depth 10 -Compress)", returnStdout: true).trim()
 
                                 def jsonSlurper = new groovy.json.JsonSlurper()
                                 def result = jsonSlurper.parseText(response)
 
-                                // Karar Anı
                                 if (result.status == "fail") {
                                     echo "🚨 YAPAY ZEKA REDDETTİ! KOD KOKUSU TESPİT EDİLDİ 🚨"
                                     echo "❌ Sınıf: ${className}"

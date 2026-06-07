@@ -35,7 +35,7 @@ public class SignalingController {
         String sessionId = headerAccessor.getSessionId();
         metrics.setLastUpdate(LocalDateTime.now());
 
-        activeNodes.put(sessionId, metrics);
+
     }
 
     @EventListener
@@ -64,11 +64,6 @@ public class SignalingController {
 
     @Scheduled(fixedRate = 5000)
     public void runBatchClustering() {
-        if (activeNodes.isEmpty()) {
-            return;
-        }
 
-        clusteringService.processClusters(activeNodes);
-        routingService.optimizeRoutes(activeNodes);
     }
 }

@@ -11,11 +11,12 @@ pipeline {
 
     stages {
         stage('SourceMeter Statik Analiz') {
-            steps {
-                echo "🔍 1. Adım: SourceMeter ile proje taranıyor..."
-                powershell "& '${SOURCEMETER_PATH}' -projectBaseDir=. -resultsDir=sm_results -projectName=CodeSmellProject"
-            }
-        }
+                    steps {
+                        echo "🔍 1. Adım: SourceMeter ile proje taranıyor..."
+                        // Eşittir (=) yerine iki nokta (:) kullanıyoruz ve '.' yerine Jenkins'in o anki tam klasör yolunu veriyoruz.
+                        powershell "& '${SOURCEMETER_PATH}' -projectBaseDir:${env.WORKSPACE} -resultsDir:${env.WORKSPACE}\\sm_results -projectName:CodeSmellProject"
+                    }
+                }
 
         stage('Yapay Zeka (GraphCodeBERT) Kod Kokusu Kontrolü') {
             steps {

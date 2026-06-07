@@ -17,6 +17,7 @@ public class MerkleService {
     private final SimpMessagingTemplate messagingTemplate;
 
     private final Map<Integer, MerkleBucket> hashBuckets = new ConcurrentHashMap<>();
+    //deneme
 
     public void collectAndVerifyHash(int sequenceId, String rootHash, String leaderSessionId, String clusterId) {
         MerkleBucket bucket = hashBuckets.computeIfAbsent(sequenceId, id -> MerkleBucket.builder()
